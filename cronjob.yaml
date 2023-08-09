@@ -21,15 +21,15 @@ spec:
                     values:
                     - "true"
           volumes:
-          - name: backups-dir
-            emptyDir: {}
-          initContainers:
-          - name: clean
-            image: busybox
-            command: ["rm", "-rf", "/backups/*"]
-            volumeMounts:
-            - name: backups-dir
-              mountPath: /backups
+          # - name: backups-dir
+          #   emptyDir: {}
+          # initContainers:
+          # - name: clean
+          #   image: busybox
+          #   command: ["rm", "-rf", "/backups/*"]
+          #   volumeMounts:
+          #   - name: backups-dir
+          #     mountPath: /backups
           - name: backup
             image: vinta/mongodb-tools:4.0.1
             workingDir: /backups
@@ -41,22 +41,22 @@ spec:
               value: mongodb-rs0-0.mongodb-rs0.default.svc.cluster.local,mongodb-rs0-1.mongodb-rs0.default.svc.cluster.local,mongodb-rs0-3.mongodb-rs0.default.svc.cluster.local
             volumeMounts:
             - name: backups-dir
-              mountPath: /backups
+              mountPath: /tmp/backups
             resources:
               requests:
                 cpu: 2
                 memory: 2G
-          containers:
-          - name: upload
-            image: google/cloud-sdk:alpine
-            workingDir: /backups
-            command: ["sh", "-c"]
-            args:
-            - gsutil -m cp -r . gs://$(GOOGLE_CLOUD_STORAGE_BUCKET)
-            env:
-            - name: GOOGLE_CLOUD_STORAGE_BUCKET
-              value: simple-project-backups
-            volumeMounts:
-            - name: backups-dir
-              mountPath: /backups
-              readOnly: true
+          # containers:
+          # - name: upload
+          #   image: google/cloud-sdk:alpine
+          #   workingDir: /backups
+          #   command: ["sh", "-c"]
+          #   args:
+          #   - gsutil -m cp -r . gs://$(GOOGLE_CLOUD_STORAGE_BUCKET)
+          #   env:
+          #   - name: GOOGLE_CLOUD_STORAGE_BUCKET
+          #     value: simple-project-backups
+          #   volumeMounts:
+          #   - name: backups-dir
+          #     mountPath: /backups
+          #     readOnly: true
