@@ -1,4 +1,5 @@
-FROM bitnami/minideb:bullseye
+# Stage 1: Build environment
+FROM bitnami/minideb:bullseye AS builder
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
@@ -9,19 +10,20 @@ RUN apt-get update && \
     ca-certificates \
     gnupg curl
 
-# RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 && \
-#    echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list && \
-
-
 RUN curl -fsSL https://pgp.mongodb.com/server-4.4.asc | gpg -o /usr/share/keyrings/mongodb-server-4.4.gpg --dearmor && \
-#    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-4.4.gpg] https://repo.mongodb.org/apt/debian bullseye/mongodb-org/4.4 multiverse" | \
-#    tee /etc/apt/sources.list.d/mongodb-org-4.4.list
     echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-4.4.gpg] http://repo.mongodb.org/apt/debian bullseye/mongodb-org/4.4 main" \ 
     | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 
 RUN apt-get update && \
     apt-get install -Vy \
     mongodb-database-tools && \
-    apt-get remove -Vy --purge gnupg curl && \
-    apt-get autoremove -Vy && \
-    rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+    apt-get remove -Vy --purge gnupg curl
+
+# Stage 2: Final image
+FROM bitnami/minideb:bullseye
+
+COPY --from=builder /usr/bin/mongodump /usr/bin/mongodump
+COPY --from=builder /usr/bin/mongorestore /usr/bin/mongorestore
+
+CMD ["mongodump"]
+
